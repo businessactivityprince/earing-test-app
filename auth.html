@@ -150,7 +150,7 @@
 </div>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-auth.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBZntxtqWZ2lHzYs21PuKdJxUYHUBFyIJM",
@@ -166,6 +166,7 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
+// If already logged in
 if (localStorage.getItem("g_local")) {
   window.location.href = "index.html";
 }
@@ -187,7 +188,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   acceptBtn.onclick = () => {
     loader.style.display = "flex";
-    signInWithPopup(auth, provider).then((result) => {
+    signInWithRedirect(auth, provider);
+  };
+
+  // Handle redirect result
+  getRedirectResult(auth).then((result) => {
+    if (result) {
       const user = result.user;
       fetch("https://script.google.com/macros/s/AKfycbzKfF4FTHamdB96yVoTgleKvY2sLaNjnfWtDKo5i6zuLtPPSQKFhbXsaiFw4r484e8i9Q/exec", {
         method: "POST",
@@ -204,7 +210,10 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("g_local", user.uid);
         window.location.href = "index.html";
       });
-    });
-  };
+    }
+  }).catch(err => {
+    console.error("Redirect login error:", err);
+  });
 });
 </script>
+
